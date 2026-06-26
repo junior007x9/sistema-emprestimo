@@ -2,12 +2,10 @@
 
 import { Calculator, ArrowLeft, Send, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { buscarClientes, salvarEmprestimoDb } from "../../actions";
 
 export default function NovoEmprestimo() {
-  const router = useRouter(); // Adicionado para fazer o redirecionamento
   const [clientes, setClientes] = useState<{id: string, nome: string}[]>([]);
   const [clienteId, setClienteId] = useState("");
   const [valor, setValor] = useState<number | "">("");
@@ -55,7 +53,8 @@ export default function NovoEmprestimo() {
 
       if (resultado.sucesso) {
         alert("Empréstimo registrado com sucesso!");
-        router.push("/emprestimos"); // Joga o usuário para a lista após salvar
+        // Correção do 404: Usando redirecionamento nativo do navegador para limpar o cache de rotas
+        window.location.href = "/emprestimos";
       } else {
         alert("Erro no banco: " + (resultado.erro || "Falha desconhecida"));
       }

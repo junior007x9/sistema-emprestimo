@@ -77,11 +77,6 @@ export default function Dashboard() {
               <span className="font-medium">Meus Clientes</span>
             </Link>
 
-            <Link href="/clientes/novo" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
-              <UserPlus className="w-5 h-5" />
-              <span className="font-medium">Novo Cliente</span>
-            </Link>
-
             <Link href="/emprestimos" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
               <FileText className="w-5 h-5" />
               <span className="font-medium">Meus Empréstimos</span>
@@ -104,15 +99,22 @@ export default function Dashboard() {
       <main className="flex-1 overflow-y-auto">
         <div className="p-8 max-w-7xl mx-auto space-y-8">
           
-          <header className="flex justify-between items-center">
+          {/* Cabeçalho com botões lado a lado */}
+          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight">Olá, Jailson!</h1>
               <p className="text-slate-400 mt-1">Aqui está o resumo financeiro com seus dados reais.</p>
             </div>
-            <Link href="/emprestimos/novo" className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-              <TrendingUp className="w-4 h-4" />
-              Novo Empréstimo
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/clientes/novo" className="bg-slate-900 hover:bg-slate-850 text-slate-200 font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all border border-slate-800 hover:border-slate-700">
+                <UserPlus className="w-4 h-4 text-cyan-400" />
+                Novo Cliente
+              </Link>
+              <Link href="/emprestimos/novo" className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                <TrendingUp className="w-4 h-4" />
+                Novo Empréstimo
+              </Link>
+            </div>
           </header>
 
           {/* Cards de Métricas Reais */}
