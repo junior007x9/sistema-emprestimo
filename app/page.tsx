@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { obterResumoDashboard } from "./actions"; // Importa a função de cálculo
+import { obterResumoDashboard, fazerLogout } from "./actions";
+import { useRouter } from "next/navigation";
 import {
   AreaChart,
   Area,
@@ -18,12 +19,11 @@ import {
   FileText, 
   TrendingUp, 
   CheckCircle2, 
-  ArrowUpRight 
+  ArrowUpRight,
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
 
-// Dados do gráfico (em um sistema real complexo, agruparíamos por mês no banco. 
-// Por enquanto mantemos estático para o visual, até termos meses de dados!)
 const dadosGrafico = [
   { mes: "Jan", emprestado: 4000, juros: 1000 },
   { mes: "Fev", emprestado: 3000, juros: 750 },
@@ -36,6 +36,7 @@ const dadosGrafico = [
 export default function Dashboard() {
   const [resumo, setResumo] = useState({ capitalAtivo: 0, jurosAReceber: 0, inadimplencia: 0 });
   const [carregando, setCarregando] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     async function carregar() {
@@ -46,31 +47,48 @@ export default function Dashboard() {
     carregar();
   }, []);
 
+  const handleSair = async () => {
+    await fazerLogout();
+    router.push("/login");
+  };
+
   return (
     <div className="flex h-screen bg-slate-950 text-slate-200 overflow-hidden font-sans">
       
       {/* Sidebar (Menu Lateral) */}
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col hidden md:flex">
-        <div className="h-20 flex items-center px-8 border-b border-slate-800">
+        <div className="h-20 flex items-center px-8 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2 text-cyan-400 font-bold text-xl tracking-wider">
             <Wallet className="w-6 h-6" />
             <span>PAY<span className="text-white">TRACK</span></span>
           </div>
         </div>
         
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 bg-cyan-500/10 text-cyan-400 rounded-lg transition-colors border border-cyan-500/20">
-            <LayoutDashboard className="w-5 h-5" />
-            <span className="font-medium">Dashboard</span>
-          </Link>
-          <Link href="/clientes/novo" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
-            <Users className="w-5 h-5" />
-            <span className="font-medium">Novo Cliente</span>
-          </Link>
-          <Link href="/emprestimos" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
-            <FileText className="w-5 h-5" />
-            <span className="font-medium">Meus Empréstimos</span>
-          </Link>
+        <nav className="flex-1 px-4 py-6 flex flex-col justify-between">
+          <div className="space-y-2">
+            <Link href="/" className="flex items-center gap-3 px-4 py-3 bg-cyan-500/10 text-cyan-400 rounded-lg transition-colors border border-cyan-500/20">
+              <LayoutDashboard className="w-5 h-5" />
+              <span className="font-medium">Dashboard</span>
+            </Link>
+            <Link href="/clientes" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
+              <Users className="w-5 h-5" />
+              <span className="font-medium">Meus Clientes</span>
+            </Link>
+            <Link href="/emprestimos" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
+              <FileText className="w-5 h-5" />
+              <span className="font-medium">Meus Empréstimos</span>
+            </Link>
+          </div>
+
+          <div className="pt-6 border-t border-slate-800">
+            <button 
+              onClick={handleSair} 
+              className="w-full flex items-center gap-3 px-4 py-3 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="font-medium">Sair do Sistema</span>
+            </button>
+          </div>
         </nav>
       </aside>
 
@@ -78,7 +96,6 @@ export default function Dashboard() {
       <main className="flex-1 overflow-y-auto">
         <div className="p-8 max-w-7xl mx-auto space-y-8">
           
-          {/* Cabeçalho */}
           <header className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-white tracking-tight">Olá, Jailson!</h1>
@@ -125,7 +142,6 @@ export default function Dashboard() {
 
           </div>
 
-          {/* Área do Gráfico */}
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
             <h3 className="text-lg font-semibold text-white mb-6">Projeção Mensal (Visual)</h3>
             <div className="h-[350px] w-full">

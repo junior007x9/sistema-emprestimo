@@ -11,17 +11,14 @@ import { cookies } from "next/headers";
 // ==========================================
 
 export async function fazerLogin(senha: string) {
-  // Puxa a senha do arquivo .env ou usa "admin123" como segurança caso não encontre
   const senhaCorreta = process.env.ADMIN_PASSWORD || "admin123";
 
   if (senha === senhaCorreta) {
-    // No Next.js 15+, cookies() é uma Promise, então precisamos usar await
     const cookieStore = await cookies();
-    
     cookieStore.set("auth_token", "autorizado", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 7 dias em segundos
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
     return { sucesso: true };
@@ -51,11 +48,12 @@ export async function salvarClienteDb(dados: {
       cpf: dados.cpf,
       endereco: dados.endereco,
     });
-    revalidatePath("/"); 
+    revalidatePath("/");
+    revalidatePath("/clientes");
     return { sucesso: true };
-  } catch (erro) {
+  } catch (erro: any) {
     console.error("Erro ao salvar no banco:", erro);
-    return { sucesso: false, erro: "Falha ao salvar cliente" };
+    return { sucesso: false, erro: erro.message };
   }
 }
 
@@ -104,10 +102,14 @@ export async function salvarEmprestimoDb(dados: {
       status: "PENDENTE"
     });
 
+    // Avisa o Next.js para atualizar essas páginas instantaneamente!
+    revalidatePath("/emprestimos");
+    revalidatePath("/");
+    
     return { sucesso: true };
-  } catch (erro) {
+  } catch (erro: any) {
     console.error("Erro ao salvar empréstimo:", erro);
-    return { sucesso: false };
+    return { sucesso: false, erro: erro.message };
   }
 }
 
@@ -138,6 +140,8 @@ export async function baixarParcelaDb(emprestimoId: string) {
       .set({ status: 'PAGO' })
       .where(eq(controlePagamentos.emprestimoId, emprestimoId));
       
+    revalidatePath("/emprestimos");
+    revalidatePath("/");
     return { sucesso: true };
   } catch (erro) {
     console.error("Erro ao dar baixa:", erro);
