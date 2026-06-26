@@ -4,7 +4,7 @@ import { db } from "../db";
 import { clientes, emprestimos, controlePagamentos } from "../db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
-import { cookies } from "next/headers"; // Importação nova para autenticação
+import { cookies } from "next/headers";
 
 // ==========================================
 // FUNÇÕES DE AUTENTICAÇÃO (LOGIN)
@@ -15,8 +15,10 @@ export async function fazerLogin(senha: string) {
   const senhaCorreta = process.env.ADMIN_PASSWORD || "admin123";
 
   if (senha === senhaCorreta) {
-    // Cria um cookie de sessão válido por 7 dias
-    cookies().set("auth_token", "autorizado", {
+    // No Next.js 15+, cookies() é uma Promise, então precisamos usar await
+    const cookieStore = await cookies();
+    
+    cookieStore.set("auth_token", "autorizado", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7, // 7 dias em segundos
@@ -28,9 +30,9 @@ export async function fazerLogin(senha: string) {
 }
 
 export async function fazerLogout() {
-  cookies().delete("auth_token");
+  const cookieStore = await cookies();
+  cookieStore.delete("auth_token");
 }
-
 
 // ==========================================
 // FUNÇÕES DE CLIENTES
