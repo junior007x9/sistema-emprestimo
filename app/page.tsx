@@ -14,7 +14,8 @@ import {
 } from "recharts";
 import { 
   LayoutDashboard, 
-  Users, 
+  Users,
+  UserPlus, 
   Wallet, 
   FileText, 
   TrendingUp, 
@@ -70,10 +71,17 @@ export default function Dashboard() {
               <LayoutDashboard className="w-5 h-5" />
               <span className="font-medium">Dashboard</span>
             </Link>
+            
             <Link href="/clientes" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
               <Users className="w-5 h-5" />
               <span className="font-medium">Meus Clientes</span>
             </Link>
+
+            <Link href="/clientes/novo" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
+              <UserPlus className="w-5 h-5" />
+              <span className="font-medium">Novo Cliente</span>
+            </Link>
+
             <Link href="/emprestimos" className="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-colors">
               <FileText className="w-5 h-5" />
               <span className="font-medium">Meus Empréstimos</span>
