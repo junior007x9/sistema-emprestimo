@@ -117,3 +117,37 @@ export async function baixarParcelaDb(emprestimoId: string) {
     return { sucesso: false };
   }
 }
+// --- ADICIONE ESTA FUNÇÃO NO FINAL DO SEU app/actions.ts ---
+
+export async function obterResumoDashboard() {
+  try {
+    const todosEmprestimos = await db.select().from(emprestimos);
+    const pagamentos = await db.select().from(controlePagamentos);
+
+    let capitalAtivo = 0;
+    let jurosAReceber = 0;
+
+    // Soma os valores reais do banco
+    todosEmprestimos.forEach(emp => {
+      capitalAtivo += emp.valorEmprestimo;
+      jurosAReceber += (emp.valorTotalPagar - emp.valorEmprestimo);
+    });
+
+    // Calcula inadimplência básica (exemplo: pagamentos não feitos)
+    let inadimplencia = 0;
+    pagamentos.forEach(pag => {
+      if (pag.status === "ATRASADO") {
+        inadimplencia += pag.valorPrincipal;
+      }
+    });
+
+    return { 
+      capitalAtivo, 
+      jurosAReceber, 
+      inadimplencia 
+    };
+  } catch (erro) {
+    console.error("Erro ao buscar resumo:", erro);
+    return { capitalAtivo: 0, jurosAReceber: 0, inadimplencia: 0 };
+  }
+}
