@@ -1,11 +1,41 @@
 "use server";
 
-import { db } from "../db"; // Importa a conexão que criamos
-import { clientes, emprestimos, controlePagamentos } from "../db/schema"; // Importa todas as tabelas
+import { db } from "../db";
+import { clientes, emprestimos, controlePagamentos } from "../db/schema";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm"; // Importação necessária para o leftJoin e where
+import { eq } from "drizzle-orm";
+import { cookies } from "next/headers"; // Importação nova para autenticação
 
-// Função para salvar o cliente no banco de dados Turso
+// ==========================================
+// FUNÇÕES DE AUTENTICAÇÃO (LOGIN)
+// ==========================================
+
+export async function fazerLogin(senha: string) {
+  // Puxa a senha do arquivo .env ou usa "admin123" como segurança caso não encontre
+  const senhaCorreta = process.env.ADMIN_PASSWORD || "admin123";
+
+  if (senha === senhaCorreta) {
+    // Cria um cookie de sessão válido por 7 dias
+    cookies().set("auth_token", "autorizado", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7, // 7 dias em segundos
+      path: "/",
+    });
+    return { sucesso: true };
+  }
+  return { sucesso: false };
+}
+
+export async function fazerLogout() {
+  cookies().delete("auth_token");
+}
+
+
+// ==========================================
+// FUNÇÕES DE CLIENTES
+// ==========================================
+
 export async function salvarClienteDb(dados: { 
   nome: string; 
   telefone: string; 
@@ -19,8 +49,6 @@ export async function salvarClienteDb(dados: {
       cpf: dados.cpf,
       endereco: dados.endereco,
     });
-    
-    // Atualiza o cache do Next.js para mostrar os dados novos imediatamente
     revalidatePath("/"); 
     return { sucesso: true };
   } catch (erro) {
@@ -29,7 +57,6 @@ export async function salvarClienteDb(dados: {
   }
 }
 
-// Função para buscar a lista de clientes
 export async function buscarClientes() {
   try {
     const listaClientes = await db.select().from(clientes);
@@ -40,7 +67,10 @@ export async function buscarClientes() {
   }
 }
 
-// Função para salvar um novo empréstimo
+// ==========================================
+// FUNÇÕES DE EMPRÉSTIMOS E PAGAMENTOS
+// ==========================================
+
 export async function salvarEmprestimoDb(dados: {
   clienteId: string;
   valor: number;
@@ -49,7 +79,6 @@ export async function salvarEmprestimoDb(dados: {
   dataVencimento: string;
 }) {
   try {
-    // 1. Insere o empréstimo
     const [novoEmprestimo] = await db.insert(emprestimos).values({
       clienteId: dados.clienteId,
       valorEmprestimo: dados.valor,
@@ -59,7 +88,6 @@ export async function salvarEmprestimoDb(dados: {
       prazoDias: dados.dias,
     }).returning();
 
-    // 2. Insere o primeiro registro no controle de pagamentos (a "linha 1" da sua planilha)
     await db.insert(controlePagamentos).values({
       emprestimoId: novoEmprestimo.id,
       numeroLinha: 1,
@@ -81,10 +109,8 @@ export async function salvarEmprestimoDb(dados: {
   }
 }
 
-// Função para buscar os empréstimos e mostrar na tabela
 export async function buscarEmprestimosComClientes() {
   try {
-    // Busca empréstimos junto com o nome do cliente associado
     const lista = await db.select({
       id: emprestimos.id,
       nomeCliente: clientes.nome,
@@ -104,7 +130,6 @@ export async function buscarEmprestimosComClientes() {
   }
 }
 
-// Função para dar baixa (Receber Pagamento)
 export async function baixarParcelaDb(emprestimoId: string) {
   try {
     await db.update(controlePagamentos)
@@ -117,7 +142,10 @@ export async function baixarParcelaDb(emprestimoId: string) {
     return { sucesso: false };
   }
 }
-// --- ADICIONE ESTA FUNÇÃO NO FINAL DO SEU app/actions.ts ---
+
+// ==========================================
+// FUNÇÃO DO DASHBOARD (RESUMO)
+// ==========================================
 
 export async function obterResumoDashboard() {
   try {
@@ -127,13 +155,11 @@ export async function obterResumoDashboard() {
     let capitalAtivo = 0;
     let jurosAReceber = 0;
 
-    // Soma os valores reais do banco
     todosEmprestimos.forEach(emp => {
       capitalAtivo += emp.valorEmprestimo;
       jurosAReceber += (emp.valorTotalPagar - emp.valorEmprestimo);
     });
 
-    // Calcula inadimplência básica (exemplo: pagamentos não feitos)
     let inadimplencia = 0;
     pagamentos.forEach(pag => {
       if (pag.status === "ATRASADO") {
@@ -141,11 +167,7 @@ export async function obterResumoDashboard() {
       }
     });
 
-    return { 
-      capitalAtivo, 
-      jurosAReceber, 
-      inadimplencia 
-    };
+    return { capitalAtivo, jurosAReceber, inadimplencia };
   } catch (erro) {
     console.error("Erro ao buscar resumo:", erro);
     return { capitalAtivo: 0, jurosAReceber: 0, inadimplencia: 0 };
